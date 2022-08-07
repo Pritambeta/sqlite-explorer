@@ -11,7 +11,7 @@ Create, Manage, Explore SQLite Databases On The Go.
 
 ## What It Is
 
-SQLite Explorer is a high qualit, free and open source tool to create, update and manage database files compatiable with SQLite.
+SQLite Explorer is a high quality, free and open source tool to create, update and manage database files compatiable with SQLite.
 
 
 
