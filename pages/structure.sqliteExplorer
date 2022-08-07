@@ -1,0 +1,120 @@
+{% extends "viewlayout.sqliteExplorer" %}
+{% block view %}
+<style>
+    .db-table tbody tr td:last-child {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+    }
+
+    .db-table tbody tr td:last-child a {
+        text-decoration: none;
+        color: #000;
+        margin-left: 3px;
+        margin-right: 3px;
+        cursor: pointer;
+    }
+
+    .db-table tbody tr td:last-child a:hover {
+        text-decoration: underline;
+    }
+    .addColumnBox {
+        display: flex;
+        align-items: center;
+    }
+    .addColumnBox * {
+        margin-right: 5px;
+    }
+</style>
+<nav class="data-navbar">
+    <ul>
+        <a href="/browse?table={{ selected_table }}">
+            <li>Browse</li>
+        </a>
+        <a href="/structure?table={{ selected_table }}" class="active">
+            <li>Structure</li>
+        </a>
+        <a href="/insert?table={{ selected_table }}">
+            <li>Insert</li>
+        </a>
+        <a href="/operations?table={{ selected_table }}">
+            <li>Operations</li>
+        </a>
+    </ul>
+</nav>
+<div class="table-container">
+    <table class="db-table">
+        <thead>
+            <tr>
+                <th style="width: 20px;">#</th>
+                <th style="width: 200px;">Name</th>
+                <th style="width: 140px;">Type</th>
+                <th style="width: 80px;">Null</th>
+                <th style="width: 120px;">Default</th>
+                <th style="width: 200px;">Index</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in data %}
+            <tr>
+                <td>{{ i[0]+1 }}</td>
+                <td>{{ i[1] }}</td>
+                <td>{{ i[2] }}</td>
+                {% if i[3] == 0 %}
+                <td>Yes</td>
+                {% else %}
+                <td>No</td>
+                {% endif %}
+                <td>{{ i[4] }}</td>
+                {% if i[5] == 1 %}
+                <td>Primary Key</td>
+                {% else %}
+                <td></td>
+                {% endif %}
+                <td><a href="/renamecolumn?table={{ selected_table }}&column={{ i[1] }}">Rename</a><a onclick="deleteColumn('{{ i[1] }}')">Drop</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<form class="addColumnBox" id="addColumnForm">
+    <p>Add:</p>
+    <input type="number" id="columnsToAdd" class="input" value="1" min="1" required>
+    <button type="submit" class="btn">Column(s)</button>
+</form>
+<script>
+    document.getElementById("addColumnForm").addEventListener("submit", (e)=>{
+        e.preventDefault();
+        let columnsToAdd = document.getElementById("columnsToAdd").value;
+        window.open(`/addcolumn?table={{ selected_table }}&col=${columnsToAdd}`, "_self").focus();
+    })
+function deleteColumn(columnName) {
+    let randomNumber = Math.floor(Math.random() * (9999 - 1000)) + 1000;
+    if (prompt(`Enter ${randomNumber} to delete the column`) == randomNumber) {
+        const table = `{{ selected_table }}`;
+        const sqlQuery = `ALTER TABLE \`${table}\` DROP \`${columnName}\``;
+        const formData = new FormData();
+        formData.append("query", sqlQuery);
+        fetch("/~sql-executer", {
+            method: "POST",
+            body: formData
+        }).then(response=>response.json()).then(data=>{
+            if (data.status == "success") {
+                showAlert(`${columnName} deleted successfully`, "green");
+                setTimeout(() => {
+                    location.reload();
+                }, 5000);
+            }
+            else {
+                showAlert("Error: Can't delete the column", "red");
+            }
+        }).catch(err=> {
+            if (err) {
+                showAlert("Error: Can't delete the column", "red");
+            }
+        })
+    }
+}
+</script>
+{% endblock %}

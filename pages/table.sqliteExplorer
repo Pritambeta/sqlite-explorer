@@ -1,0 +1,258 @@
+{% extends "viewlayout.sqliteExplorer" %}
+{% block view %}
+<style>
+    .table-name-box {
+        display: flex;
+        align-items: center;
+        margin-top: 5px;
+    }
+
+    .table-name-box p {
+        margin-right: 10px;
+    }
+
+    .input {
+        margin-right: 10px;
+        box-shadow: none;
+        outline: solid 2px transparent;
+        transition: 0.2s;
+    }
+
+    .input:not([type=checkbox]):focus {
+        outline: solid 2px rgb(226, 226, 226);
+    }
+
+
+    .input-full {
+        width: 100%;
+    }
+
+    .input:focus {
+        box-shadow: none;
+        transform: none;
+    }
+
+    .table-container {
+        margin-top: 12px;
+    }
+
+    select {
+        width: 100%;
+    }
+
+    .save-button {
+        margin-top: 15px;
+        margin-bottom: 20px;
+    }
+</style>
+<form id="data-form">
+<div class="table-name-box">
+    <p>Table Name: </p><input type="text" class="input" id="get_table_name">
+    <p>Add: </p>
+    <input type="number" class="input" min="1" id="columnsToAdd">
+    <p>Column(s)</p>
+    <button class="btn" id="columnAddButton">Go</button>
+</div>
+
+<div class="table-container">
+    <table class="db-table">
+        <thead>
+            <tr>
+                <th style="width: 160px;">Name</th>
+                <th style="width: 120px;">Type</th>
+                <th style="width: 160px;">Default</th>
+                <th style="width: 40px;">Null</th>
+                <th style="width: 140px;">Index</th>
+                <th>AutoIncrement</th>
+            </tr>
+        </thead>
+        <tbody id="rows">
+            {% for i in range(4) %}
+            <tr>
+                <td><input type="text" class="input input-full get_column_name"></td>
+                <td>
+                    <select class="input input-full get_column_type">
+                        <option
+                            title="The value is a signed integer, stored in 0, 1, 2, 3, 4, 6, or 8 bytes depending on the magnitude of the value.">
+                            INTEGER</option>
+                        <option
+                            title="The value is a text string, stored using the database encoding (UTF-8, UTF-16BE or UTF-16LE).">
+                            TEXT</option>
+                        <option title="The value is a blob of data, stored exactly as it was input.">BLOB</option>
+                        <option
+                            title="The value is a floating point value, stored as an 8-byte IEEE floating point number.">
+                            REAL</option>
+                    </select>
+                </td>
+                <td><input type="text" class="input input-full get_default" list="defaultList"></td>
+                <td><input type="checkbox" class="input-full get_null"></td>
+                <td>
+                    <select class="input select-index get_index">
+                        <option value="">---</option>
+                        <option value="PRIMARY">PRIMARY</option>
+                    </select>
+                </td>
+                <td><input type="checkbox" class="input autoincrement-input get_autoincrement"
+                        data-autoincrementpointer="{{i}}"></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <button class="btn save-button" id="save-button">Save</button>
+</div>
+<datalist id="defaultList">
+    <option value="NULL">
+</datalist>
+</form>
+<script>
+    function _(elms) {
+        return document.querySelectorAll(elms);
+    }
+    function _id(elm) {
+        return document.getElementById(elm);
+    }
+
+    function check() {
+        _(".autoincrement-input").forEach(element => {
+            element.addEventListener("click", (e) => {
+                let check = element.checked;
+                if (check) {
+                    let pointer = element.getAttribute("data-autoincrementpointer");
+                    _(".select-index")[pointer].value = "PRIMARY";
+                }
+            })
+        })
+    }
+    check();
+
+
+    _id("save-button").addEventListener("click", (e) => {
+        const formData = new FormData();
+        let query = "";
+        let primary_key = "";
+        let looped = 0;
+        _("#rows tr").forEach(element => {
+            if (element.getElementsByClassName("get_column_name")[0].value != "" && _id("get_table_name").value != "") {
+                let column_name = element.getElementsByClassName("get_column_name")[0].value;
+                let column_type = element.getElementsByClassName("get_column_type")[0].value;
+                let column_default = element.getElementsByClassName("get_default")[0].value;
+                let column_null = element.getElementsByClassName("get_null")[0].checked;
+                let column_index = element.getElementsByClassName("get_index")[0].value;
+                let column_autoIncrement = element.getElementsByClassName("get_autoincrement")[0].checked;
+
+                // Column Null
+                if (column_null) {
+                    column_null = "NULL";
+                }
+                else {
+                    column_null = "NOT NULL";
+                }
+                // Column default
+                if (column_default == "") {
+                    column_default = "";
+                }
+                else if (column_default == "NULL") {
+                    column_default = "DEFAULT NULL";
+                }
+                else {
+                    if (column_type == "INTEGER") {
+                        column_default = `DEFAULT ${parseInt(column_default)}`;
+                    }
+                    else {
+                        column_default = `DEFAULT '${column_default}'`;
+                    }
+                }
+
+                // Auto Increment
+                if (column_autoIncrement) {
+                    column_autoIncrement = "AUTOINCREMENT";
+                }
+                else {
+                    column_autoIncrement = "";
+                }
+                // Primary Key
+                if (column_index == "PRIMARY") {
+                    primary_key = ` PRIMARY KEY`;
+                }
+                else {
+                    primary_key = "";
+                }
+
+                let comma = ""
+                if (looped != 0) {
+                    comma = ","
+                }
+                query += `${comma} \`${column_name.replace(" ", "_").replace("-", "_")}\` ${column_type} ${column_null}${primary_key} ${column_autoIncrement} ${column_default}`;
+                looped++;
+            }
+        })
+
+        let sqlQuery = `CREATE TABLE \`${_id("get_table_name").value.replace(" ", "_")}\` (${query + primary_key})`;
+        formData.append("sql", sqlQuery);
+        fetch("/~create-table", {
+            method: "POST",
+            body: formData
+        }).then(response => response.json()).then((data) => {
+            if (data.status == "success") {
+                showAlert("Table Created! Please restart the server", "green")
+                _id("data-form").reset();
+            }
+            else {
+                showAlert("Error: Failed to create table", "red")
+            }
+        }).catch((err) => {
+            if (err) {
+                showAlert("Error: Failed to create table", "red")
+            }
+        })
+
+    })
+
+
+
+
+    _id("columnAddButton").addEventListener("click", (e) => {
+        let columnsToAdd = _id("columnsToAdd").value;
+        let i = _(".autoincrement-input").length;
+        for (let j = 0; j < columnsToAdd; j++) {
+            if (columnsToAdd >= 1) {
+                let tr = document.createElement("tr");
+                tr.innerHTML += `<td><input type="text" class="input input-full get_column_name"></td>
+                <td>
+                    <select class="input input-full get_column_type">
+                        <option
+                            title="The value is a signed integer, stored in 0, 1, 2, 3, 4, 6, or 8 bytes depending on the magnitude of the value.">
+                            INTEGER</option>
+                            <option
+                                title="The value is a text string, stored using the database encoding (UTF-8, UTF-16BE or UTF-16LE).">
+                                TEXT</option>
+                            <option title="The value is a blob of data, stored exactly as it was input.">BLOB</option>
+                        <option
+                            title="The value is a floating point value, stored as an 8-byte IEEE floating point number.">REAL</option>
+                    </select>
+                </td>
+                <td><input type="text" class="input input-full get_default"></td>
+                <td><input type="checkbox" class="input-full get_null"></td>
+                <td>
+                    <select class="input select-index get_index">
+                        <option value="">---</option>
+                        <option value="PRIMARY">PRIMARY</option>
+                    </select>
+                </td>
+                <td><input type="checkbox" class="input autoincrement-input get_autoincrement"
+                        data-autoincrementpointer="${i + j}"></td>`;
+                _id("rows").appendChild(tr);
+            }
+        }
+        check();
+        _id("columnsToAdd").value = "";
+
+    })
+    _id("data-form").addEventListener("submit", (e)=> {
+        e.preventDefault();
+    })
+
+
+
+</script>
+{% endblock %}

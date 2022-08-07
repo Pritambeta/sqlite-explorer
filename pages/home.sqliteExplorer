@@ -1,0 +1,99 @@
+{% extends "viewlayout.sqliteExplorer" %}
+{% block view %}
+<div class="table-container">
+    <table class="db-table">
+        <thead>
+            <tr>
+                <th style="width: 200px;">Actions</th>
+                <th>sno</th>
+                <th>text</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Action</td>
+                <td>1</td>
+                <td>text 1</td>
+            </tr>
+            <tr>
+                <td>Action</td>
+                <td>2</td>
+                <td>text 2</td>
+            </tr>
+            <tr>
+                <td>Action</td>
+                <td>2</td>
+                <td>text 2</td>
+            </tr>
+            <tr>
+                <td>Action</td>
+                <td>2</td>
+                <td>text 2</td>
+            </tr>
+            <tr>
+                <td>Action</td>
+                <td>2</td>
+                <td>text 2</td>
+            </tr>
+            <tr>
+                <td>Action</td>
+                <td>2</td>
+                <td>text 2</td>
+            </tr>
+            <tr>
+                <td>Action</td>
+                <td>2</td>
+                <td>text 2</td>
+            </tr>
+            <tr>
+                <td>Action</td>
+                <td>2</td>
+                <td>text 2</td>
+            </tr>
+            <tr>
+                <td>Action</td>
+                <td>2</td>
+                <td>text 2</td>
+            </tr>
+            <tr>
+                <td>Action</td>
+                <td>2</td>
+                <td>text 2</td>
+            </tr>
+            <tr>
+                <td>Action</td>
+                <td>2</td>
+                <td>text 2</td>
+            </tr>
+            <tr>
+                <td>Action</td>
+                <td>2</td>
+                <td>text 2</td>
+            </tr>
+            <tr>
+                <td>Action</td>
+                <td>2</td>
+                <td>text 2</td>
+            </tr>
+
+        </tbody>
+    </table>
+</div>
+
+<div class="controlls">
+    <div class="pagination">
+        <a href="#" class="btn">≪</a>
+        <a href="#" class="btn">1</a>
+        <a href="#" class="btn">2</a>
+        <a href="#" class="btn">3</a>
+        <a href="#" class="btn">≫</a>
+    </div>
+    <div>
+        <a href="#" class="btn">Delete</a>
+    </div>
+    <form>
+        <input type="text" name="query" class="input" placeholder="Search...">
+        <button type="submit" class="btn">Search</button>
+    </form>
+</div>
+{% endblock %}

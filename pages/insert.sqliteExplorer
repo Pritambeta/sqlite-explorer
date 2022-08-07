@@ -1,0 +1,145 @@
+{% extends "viewlayout.sqliteExplorer" %}
+{% block view %}
+<style>
+    .input {
+        width: 100%;
+        margin-right: 10px;
+        box-shadow: none !important;
+        outline: solid 2px transparent;
+        resize: vertical;
+        transition: outline 0.2s;
+    }
+
+    .input:focus {
+        box-shadow: none;
+        transform: none;
+        outline: solid 2px #eee;
+    }
+
+    .input {
+        font-size: 14px;
+    }
+
+    textarea {
+        font-family: monospace;
+    }
+
+    .btnInsert {
+        margin-top: 12px;
+        margin-bottom: 12px;
+    }
+</style>
+<nav class="data-navbar">
+    <ul>
+        <a href="/browse?table={{ selected_table }}">
+            <li>Browse</li>
+        </a>
+        <a href="/structure?table={{ selected_table }}">
+            <li>Structure</li>
+        </a>
+        <a href="/insert?table={{ selected_table }}" class="active">
+            <li>Insert</li>
+        </a>
+        <a href="/operations?table={{ selected_table }}">
+            <li>Operations</li>
+        </a>
+    </ul>
+</nav>
+
+<div class="table-container">
+    <form id="data-inserter-form">
+        <table class="db-table">
+            <thead>
+                <tr>
+                    <th style="width: 140px;">Column</th>
+                    <th style="width: 140px;">Type</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in data %}
+                <tr class="get_column_data">
+                    <td class="get_column_name">{{ i[1] }}</td>
+                    <td class="get_column_type" data-primarykey="{{ i[5] }}">{{ i[2] }}</td>
+                    <td>
+                        {% if i[2] in ["TEXT", "BLOB"] %}
+                        <textarea cols="30" rows="10"
+                            class="input get_column_value">{% if i[4] in [None, NULL, "None", "NULL"] %}{% else %}{{ i[4].replace("'", "") }}{% endif %}</textarea>
+                        {% else %}
+                        <input type="text" class="input get_column_value"
+                            value='{% if i[4] == "CURRENT_TIMESTAMP" %}current_timestamp(){% elif i[4] in [None, NULL, "None", "NULL"] %}{% else %}{{ i[4].replace("'", "") }}{% endif %}'>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
+    <button type="button" class="btn btnInsert" id="insertButtton">Insert</button>
+</div>
+<script>
+    function _(elms) {
+        return document.querySelectorAll(elms);
+    }
+    function _id(elm) {
+        return document.getElementById(elm);
+    }
+
+    _id("insertButtton").addEventListener("click", () => {
+        let keys = [];
+        let values = [];
+        _(".get_column_data").forEach(element => {
+            let column_name = element.getElementsByClassName("get_column_name")[0].innerText;
+            let column_value = element.getElementsByClassName("get_column_value")[0].value;
+            keys.push(column_name);
+            values.push(column_value);
+        })
+        let bracket1 = `(`;
+        for (let i = 0; i < keys.length; i++) {
+            let comma = ","
+            if (i == 0) {
+                comma = "";
+            }
+            bracket1 += comma + keys[i];
+        }
+        bracket1 += `)`;
+
+        let bracket2 = `(`;
+        for (let i = 0; i < values.length; i++) {
+            let comma = ",";
+            if (i == 0) {
+                comma = "";
+            }
+
+            let valueQuery = `'${parseText(values[i])}'`;
+            if (_(".get_column_type")[i].getAttribute("data-primarykey") == 1 && values[i] == "") {
+                valueQuery = "NULL";
+            }
+
+            bracket2 += comma + valueQuery;
+        }
+        bracket2 += `)`;
+        let sqlQuery = `INSERT INTO \`{{selected_table}}\` ${bracket1} VALUES ${bracket2}`;
+        let formData = new FormData();
+        formData.append("sql", sqlQuery);
+        fetch("/~insert-data", {
+            method: "POST",
+            body: formData
+        }).then(response => response.json()).then((data) => {
+            if (data.status == "success") {
+                showAlert("Data inserted successfully", "green")
+                _id("data-inserter-form").reset();
+            }
+        }).catch(err => {
+            if (err) {
+                showAlert("Error: The server is facing some internal issues", "red");
+            }
+        })
+
+    })
+    _id("data-inserter-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+    })
+
+</script>
+{% endblock %}
