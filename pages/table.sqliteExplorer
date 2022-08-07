@@ -42,7 +42,7 @@
 
     .save-button {
         margin-top: 15px;
-        margin-bottom: 20px;
+        margin-bottom: 120px;
     }
 </style>
 <form id="data-form">
@@ -102,7 +102,7 @@
 </div>
 <datalist id="defaultList">
     <option value="NULL">
-</datalist>
+    </datalist>
 </form>
 <script>
     function _(elms) {
