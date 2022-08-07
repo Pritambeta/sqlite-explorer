@@ -68,7 +68,7 @@ def resetApp(event):
 
 root.title("SQLite Database Explorer")
 root.geometry("400x220")
-#root.wm_iconbitmap("media/images/sqliteExplorer.ico")
+# root.wm_iconbitmap("media/images/sqliteExplorer.ico")
 root.minsize(400, 200)
 root.maxsize(455, 300)
 root.config(background="#ffffff")
