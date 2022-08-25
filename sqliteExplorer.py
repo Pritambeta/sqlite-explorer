@@ -345,18 +345,12 @@ def sql_executer():
 
 @app.route("/addcolumn")
 def add_column():
-    if "table" in request.args and "col" in request.args:
+    if "table" in request.args:
         table = request.args.get("table")
-        col = request.args.get("col")
         if (sqliteFetch(f''' SELECT `tbl_name` from sqlite_master WHERE `name` = '{table}' ''')) == [] or table == "sqlite_sequence":
             return render_template("error.sqliteExplorer", basicdata=basicdata), 404
         data = get_table_info(table)
-        col = int(col)
-        if col <= 0:
-            col = 1
-        elif col >= 100:
-            col = 100
-        return render_template("addcolumn.sqliteExplorer", basicdata=basicdata, selected_table=table, data=data, col=col)
+        return render_template("addcolumn.sqliteExplorer", basicdata=basicdata, selected_table=table, data=data)
     else:
         return render_template("error.sqliteExplorer", basicdata=basicdata), 404
 

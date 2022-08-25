@@ -79,9 +79,7 @@
     </table>
 </div>
 <form class="addColumnBox" id="addColumnForm">
-    <p>Add:</p>
-    <input type="number" id="columnsToAdd" class="input" value="1" min="1" required>
-    <button type="submit" class="btn">Column(s)</button>
+    <a href="/addcolumn?table={{ selected_table }}" class="btn">Add a Column</a>
 </form>
 <script>
     document.getElementById("addColumnForm").addEventListener("submit", (e)=>{
