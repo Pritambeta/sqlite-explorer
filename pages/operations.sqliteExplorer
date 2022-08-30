@@ -117,7 +117,8 @@
                 body: formData
             }).then(response=>response.json()).then(data=>{
                 if (data.status == "success") {
-                    showAlert("{{ selected_table }} has been deleted successfully! Please restart the server", "green");
+                    showAlert("{{ selected_table }} has been deleted successfully!", "green");
+                    refreshData();
                     setTimeout(() => {
                         window.open("/", "_self").focus();
                     }, 5000);
@@ -144,7 +145,8 @@
                 body: formData
             }).then(response=>response.json()).then(data=>{
                 if (data.status == "success") {
-                    showAlert(`{{ selected_table }} has been renamed to ${new_table_name}! Please restart the server`, "green");
+                    showAlert(`{{ selected_table }} has been renamed to ${new_table_name}!`, "green");
+                    refreshData();
                     setTimeout(() => {
                         window.open(`/operations?table=${new_table_name}`, "_self").focus();
                     }, 5000);

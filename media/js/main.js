@@ -33,3 +33,6 @@ function clearText(selector) {
 function parseText(string) {
     return string.replaceAll("'", "&apos;");
 }
+function refreshData() {
+    fetch("/~refresh");
+}

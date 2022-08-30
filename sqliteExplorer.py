@@ -116,11 +116,20 @@ def sendJson(dict, statusCode):
     )
     return response
 
+
 basicdata = {
     "database_name": os_path.basename(database),
     "table_array": sqliteFetch(''' select `tbl_name` from sqlite_master WHERE `tbl_name` IS NOT 'sqlite_sequence' '''),
     "database_location": database
 }
+
+def refreshBasicData():
+    global basicdata
+    basicdata = {
+    "database_name": os_path.basename(database),
+    "table_array": sqliteFetch(''' select `tbl_name` from sqlite_master WHERE `tbl_name` IS NOT 'sqlite_sequence' '''),
+    "database_location": database
+    }
 
 @app.route("/")
 def index():
@@ -384,7 +393,10 @@ def rename_column():
             break
     return render_template("renamecolumn.sqliteExplorer", basicdata=basicdata, selected_table=table, column_data=column_data)
 
-
+@app.route("/~refresh")
+def refresh_data():
+    refreshBasicData()
+    return ""
 
 @app.route("/favicon.ico")
 def favicon():

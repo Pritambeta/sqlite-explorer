@@ -186,15 +186,17 @@
                 looped++;
             }
         })
-
-        let sqlQuery = `CREATE TABLE \`${_id("get_table_name").value.replace(" ", "_")}\` (${query + primary_key})`;
+        let tableName = _id("get_table_name").value.replace(" ", "_");
+        let sqlQuery = `CREATE TABLE \`${tableName}\` (${query + primary_key})`;
         formData.append("sql", sqlQuery);
         fetch("/~create-table", {
             method: "POST",
             body: formData
         }).then(response => response.json()).then((data) => {
             if (data.status == "success") {
-                showAlert("Table Created! Please restart the server", "green")
+                showAlert("Table created successfully!", "green");
+                refreshData();
+                _id("dbTables").innerHTML += `<a href="/browse?table=${tableName}"><li>${tableName}</li></a>`;
                 _id("data-form").reset();
             }
             else {
@@ -207,9 +209,6 @@
         })
 
     })
-
-
-
 
     _id("columnAddButton").addEventListener("click", (e) => {
         let columnsToAdd = _id("columnsToAdd").value;

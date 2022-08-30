@@ -131,10 +131,11 @@ body {
     margin-top: 10px;
     margin-bottom: 15px;
     border-radius: 5px;
+    outline: none;
     box-shadow: 0 4px #6e74dd;
     /* transition: 0.05s; */
 }
-.db-create-table:active {
+.db-create-table:active, .db-create-table:focus {
     transform: translateY(2px);
     box-shadow: 0 2px #6e74dd;
 }
@@ -194,6 +195,7 @@ body {
     font-size: 14px;
     text-decoration: none;
     display: inline-block;
+    outline: none;
     box-shadow: 0 4px #646ad8;
 }
 .btn-disabled {
@@ -202,7 +204,7 @@ body {
     box-shadow: 0 2px #646ad8;
     opacity: 0.8;
 }
-.btn:active {
+.btn:active, .btn:focus {
     transform: translateY(2px);
     box-shadow: 0 2px #646ad8;
 }
