@@ -43,15 +43,16 @@
             body: formData
         }).then(response=>response.json()).then(data=>{
             if (data.status == "success") {
-                showAlert("Query executed successfully", "green")
+                showAlert("Query executed successfully", "green");
                 if (data.data.length > 0) {
                     _id("output").innerHTML = `<h4>Output:</h4>
-        <textarea cols="30" rows="10" class="sqlTextArea margin-top-5" id="sqlOutput">${JSON.stringify(data.data)}</textarea>
-        <button class="btn" onclick="clearText('#sqlOutput')"">Clear</button>
-        <button class="btn" onclick="copyText(this, '#sqlOutput')">Copy</button>`;
+                    <textarea cols="30" rows="10" class="sqlTextArea margin-top-5" id="sqlOutput">${JSON.stringify(data.data)}</textarea>
+                    <button class="btn" onclick="clearText('#sqlOutput')"">Clear</button>
+                    <button class="btn" onclick="copyText(this, '#sqlOutput')">Copy</button>`;
                 }
                 else {
                     _id("output").innerHTML = "";
+                    refreshData();
                 }
             }
             else {
