@@ -4,7 +4,7 @@
     <a href="/create" class="db-create-table">New Table</a>
     <ul class="db-tables" id="dbTables">
         {% for table in basicdata["table_array"] %}
-        <a href="/browse?table={{ table[0] }}"><li {% if selected_table == table[0] %}class="active"{% endif %}>{{ table[0] }}</li></a>
+        <a href="/browse?table={{ table[0] }}"><li{% if selected_table == table[0] %} class="active"{% endif %}>{{ table[0] }}</li></a>
         {% endfor %}
     </ul>
 </div>
