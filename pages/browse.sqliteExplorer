@@ -61,19 +61,19 @@
 </div>
 
 <div class="controlls">
-    <div>
-        {% if not buttonDisabled %}
-        <button class="btn" id="loadMoreButton">Load More</button>
-        {% else %}
-        <button class="btn btn-disabled" id="loadMoreButton" disabled>Disabled</button>
-        {% endif %}
-    </div>
     {% if data["primary_key"] != None %}
     <div>
         <button class="btn" id="checkAllButton">Check All</button>
         <button class="btn" id="deleteCheckedRowsButton">Delete</button>
     </div>
     {% endif %}
+    <div>
+        {% if not buttonDisabled %}
+        <div class="btnGroup">
+            {{ buttons | safe }}
+        </div>
+        {% endif %}
+    </div>
     <form id="search-form">
         <input type="text" id="query" class="input" placeholder="Search..." required>
         <button type="submit" class="btn">Search</button>
@@ -86,36 +86,6 @@
     function _(selector) {
         return document.querySelectorAll(selector);
     }
-    _id("loadMoreButton").addEventListener("click", (e)=> {
-        e.target.innerHTML = "Loading...";
-        let totalRows = _("#rows tr").length
-        let formData = new FormData();
-        formData.append("rows", totalRows);
-        formData.append("table", "{{ selected_table }}");
-        fetch("/~fetchrows", {
-            method: "POST",
-            body: formData
-        }).then(response=>response.json()).then((data)=> {
-            if (data.status == "finished") {
-                e.target.innerHTML = "Finished";
-                e.target.setAttribute("disabled", "true");
-                e.target.classList.add("class", "btn-disabled");
-            }
-            data.forEach(element => {
-                _id("rows").innerHTML += `
-                <tr>
-                {% if data["primary_key"] != None %}
-                    <td><input type="checkbox" data-index="${element[{{ data["primary_key_index"] }}]}" class="row-checkbox"><span><a href="/editrow?table={{ selected_table }}&key={{ data["primary_key"] }}&index=${element[{{ data["primary_key_index"] }}]}">Edit</a><a onclick="deleteRow('${element[{{ data["primary_key_index"] }}]}', this)">Delete</a></span></td>
-                {% endif %}
-                {% for i in data["rows"][0] %}
-                <td>${element[{{ loop.index - 1 }}].toString().replace("<", "&#60").replace(">", "&#62;").substr(0, 200) }</td>
-                {% endfor %}
-                </tr>
-                `;
-                e.target.innerHTML = "Load More";
-            });
-        })
-    })
     {% if data["primary_key"] != None %}
     let checkedAll = false;
     _id("checkAllButton").addEventListener("click", (e)=> {

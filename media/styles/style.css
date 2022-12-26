@@ -196,7 +196,34 @@ body {
     text-decoration: none;
     display: inline-block;
     outline: none;
+    user-select: none;
     box-shadow: 0 4px #646ad8;
+}
+.btnGroup {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 5px;
+}
+.btnGroup .btn {
+    border-radius: 0;
+}
+.btn-hidden {
+    display: none;
+}
+.btn-active {
+    transform: translateY(2px);
+    box-shadow: 0 2px #646ad8;
+    cursor: default;
+}
+.btn-single {
+    border-radius: 5px 5px 5px 5px !important;
+}
+.btn-left {
+    border-radius: 5px 0px 0px 5px !important;
+}
+.btn-right {
+    border-radius: 0px 5px 5px 0px !important;
 }
 .btn-disabled {
     cursor: default;

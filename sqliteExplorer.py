@@ -9,13 +9,15 @@ from webbrowser import open as webbrowser_open
 from pickle import load as pickle_load, dumps as pickle_dumps 
 from tkinter import *
 import tkinter.filedialog as filedialog
+from math import ceil
 
 template_folder = os_path.abspath("pages")
 static_folder = os_path.abspath("media")
 app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
 
+
 getLogger('werkzeug').disabled = True
-environ['WERKZEUG_RUN_MAIN'] = 'true'
+environ['WERKZEUG_RUN_MAIN'] = "true"
 
 
 file_for_storing = "media/data/data.sqliteExplorer"
@@ -26,6 +28,7 @@ def get_data():
 def write_data(data):
     with open(file_for_storing, "wb") as e:
         e.write(pickle_dumps(data))
+
 
 root = Tk()
 def newDatabase(event):
@@ -92,10 +95,8 @@ if get_data()["file_location"] != "":
 root.mainloop()
 
 
-
-# database = "data.ytconvert"
-# print(database)
-# conn = sqlite3.connect(database, check_same_thread=False)
+database = "jokerquotes.db"
+conn = sqlite3.connect(database, check_same_thread=False)
 conn = sqlite3.connect(database, check_same_thread=False)
 
 def sqliteFetch(query):
@@ -116,6 +117,67 @@ def sendJson(dict, statusCode):
     )
     return response
 
+def parseString(string):
+    parsedString = string.replace("'", "&apos;").replace( "\\", "&bsol;")
+    return parsedString
+
+def createButtons(data):
+    currentPage = data['currentPage']
+    totalRow = data['totalRow']
+    toBeShowed = data['toBeShowed']
+    totalPages = data['totalPages']
+    table = data['table']
+
+    firstButton = button1 = button2 = button3 = button4 = button5 = lastButton = ""
+
+    if currentPage == 1:
+        if totalRow > toBeShowed:
+            button1 = f'''<a class="btn btn-left btn-active" disabled>1</a>'''
+            button2 = f'''<a href="/browse?table={table}&page=2" class="btn">2</a>'''
+        if totalRow > (toBeShowed*2):
+            button3 = f'''<a href="/browse?table={table}&page=3" class="btn">3</a>'''
+        if totalRow > (toBeShowed*3):
+            button4 = f'''<a href="/browse?table={table}&page=4" class="btn">4</a>'''
+        if totalRow > (toBeShowed*4):
+            button5 = f'''<a href="/browse?table={table}&page=5" class="btn">5</a>'''
+        if totalRow > toBeShowed:
+            lastButton = f'''<a href="/browse?table={table}&page={totalPages}" class="btn btn-right">&raquo;</a>'''
+
+    elif currentPage >= totalPages:
+        firstButton = f'''<a href="/browse?table={table}&page=1" class="btn btn-left">&laquo;</a>'''
+        if currentPage-4 > 0:
+            button1 = f'''<a href="/browse?table={table}&page={currentPage-4}" class="btn">{currentPage-4}</a>'''
+        if currentPage-3 > 0:
+            button2 = f'''<a href="/browse?table={table}&page={currentPage-3}" class="btn">{currentPage-3}</a>'''
+        if currentPage-2 > 0:
+            button3 = f'''<a href="/browse?table={table}&page={currentPage-2}" class="btn">{currentPage-2}</a>'''
+
+        button4 = f'''<a href="/browse?table={table}&page={currentPage-1}" class="btn">{currentPage-1}</a>'''
+        button5 = f'''<a class="btn btn-active btn-right">{currentPage}</a>'''
+        
+    else:
+        firstButton = f'''<a href="/browse?table={table}&page=1" class="btn btn-left">&laquo;</a>'''
+        if currentPage-2 > 0:
+            button1 = f'''<a href="/browse?table={table}&page={currentPage-2}" class="btn">{currentPage-2}</a>'''
+        button2 = f'''<a href="/browse?table={table}&page={currentPage-1}" class="btn">{currentPage-1}</a>'''
+        button3 = f'''<a class="btn btn-active" disabled>{currentPage}</a>'''
+        button4 = f'''<a href="/browse?table={table}&page={currentPage+1}" class="btn">{currentPage+1}</a>'''
+        if totalPages >= currentPage+2:
+            button5 = f'''<a href="/browse?table={table}&page={currentPage+2}" class="btn">{currentPage+2}</a>'''
+            if currentPage == 2:
+                if totalPages >= currentPage+3:
+                    button5 += f'''<a href="/browse?table={table}&page={currentPage+3}" class="btn">{currentPage+3}</a>'''
+        if currentPage == (totalPages-1):
+            if currentPage-3 > 0:
+                tem = button1
+                button1 = f'''<a href="/browse?table={table}&page={currentPage-3}" class="btn">{currentPage-3}</a>''' + tem
+        
+        lastButton = f'''<a href="/browse?table={table}&page={totalPages}" class="btn btn-right">&raquo;</a>'''
+
+        
+    
+        
+    return (firstButton + button1 + button2 + button3 + button4 + button5 + lastButton)
 
 basicdata = {
     "database_name": os_path.basename(database),
@@ -138,7 +200,7 @@ def index():
 @app.route("/browse")
 def browse():
     if "table" in request.args:
-        table = request.args.get("table")
+        table = parseString(request.args.get("table"))
         if (sqliteFetch(f''' SELECT `tbl_name` from sqlite_master WHERE `name` = '{table}' ''')) == [] or table == "sqlite_sequence":
             return render_template("error.sqliteExplorer", basicdata=basicdata), 404
         if "search_query" in request.args:
@@ -152,11 +214,39 @@ def browse():
                     q += f'''{key[1]} LIKE '%{ search_query }%' '''
                 else:
                     q += f'''{key[1]} LIKE '%{ search_query }%' OR '''
+            q += " LIMIT 100"
             query = sqliteFetch(q)
-            buttonDisabled = True
+            createdButton = ""
         else:
-            query = sqliteFetch(f'''SELECT * FROM {table} LIMIT 50''')
-            buttonDisabled = False
+            totalRow = sqliteFetch(f'''SELECT count(*) FROM {table} ''')[0][0]
+            if totalRow <= 0:
+                totalRow = 1
+            toBeShowed = 50
+            totalPages = ceil(totalRow/toBeShowed)
+            if "page" not in request.args:
+                pageCount = 1
+            else:
+                pageCount = request.args.get("page")
+                try:
+                    pageCount = int(pageCount)
+                except ValueError:
+                    pageCount = 1
+                if pageCount <= 0:
+                    pageCount = 1
+                if pageCount >= totalPages:
+                    pageCount = totalPages
+
+            
+            rowsAlreadyShowed = ((pageCount-1)*toBeShowed)
+            data = {
+                "currentPage": pageCount,
+                "totalRow": totalRow,
+                "toBeShowed": toBeShowed,
+                "totalPages": totalPages,
+                "table": table
+            }
+            createdButton = createButtons(data)
+            query = sqliteFetch(f'''SELECT * FROM {table} LIMIT {rowsAlreadyShowed}, 50''')
         column_data = get_table_info(table)
         primary_key = None
         primary_key_index = None
@@ -172,27 +262,15 @@ def browse():
             "primary_key_index": primary_key_index
         }
 
-        return render_template("browse.sqliteExplorer", basicdata=basicdata, selected_table=table, data=data, buttonDisabled=buttonDisabled)
+        return render_template("browse.sqliteExplorer", basicdata=basicdata, selected_table=table, data=data, buttons=createdButton)
     else:
         return render_template("error.sqliteExplorer", basicdata=basicdata), 404
-
-@app.route("/~fetchrows", methods=['POST'])
-def fetchrows():
-    if "rows" in request.form and "table" in request.form:
-        rows = request.form.get("rows")
-        table = request.form.get("table")
-        data = sqliteFetch(f''' SELECT * FROM {table} LIMIT {rows}, 50 ''')
-        if data == []:
-            return sendJson({"status": "finished", "message": "Finished"}, 200)
-        return sendJson(data, 200)
-    else:
-        return sendJson({"status": "failure", "message": "Parameters are needed"}, 405)
 
 
 @app.route("/structure")
 def structure():
     if "table" in request.args:
-        table = request.args.get("table")
+        table = parseString(request.args.get("table"))
         if (sqliteFetch(f''' SELECT `tbl_name` from sqlite_master WHERE `name` = '{table}' ''')) == [] or table == "sqlite_sequence":
             return render_template("error.sqliteExplorer", basicdata=basicdata), 404
         data = get_table_info(table)
@@ -225,7 +303,7 @@ def create_table_function():
 @app.route("/insert")
 def insert():
     if "table" in request.args:
-        table = request.args.get("table")
+        table = parseString(request.args.get("table"))
         if (sqliteFetch(f''' SELECT `tbl_name` from sqlite_master WHERE `name` = '{table}' ''')) == [] or table == "sqlite_sequence":
             return render_template("error.sqliteExplorer", basicdata=basicdata), 404
         data = get_table_info(table)
@@ -255,7 +333,7 @@ def insert_data():
 @app.route("/operations")
 def operations():
     if "table" in request.args:
-        table = request.args.get("table")
+        table = parseString(request.args.get("table"))
         if (sqliteFetch(f''' SELECT `tbl_name` from sqlite_master WHERE `name` = '{table}' ''')) == [] or table == "sqlite_sequence":
             return render_template("error.sqliteExplorer", basicdata=basicdata), 404
         data = get_table_info(table)
@@ -266,7 +344,7 @@ def operations():
 @app.post("/~empty-table")
 def empty_table():
     if "table" in request.form:
-        table = request.form.get("table")
+        table = parseString(request.form.get("table"))
         if (sqliteFetch(f''' SELECT `tbl_name` from sqlite_master WHERE `name` = '{table}' ''')) == [] or table == "sqlite_sequence":
             return render_template("error.sqliteExplorer", basicdata=basicdata), 404
         query = conn.execute(f''' DELETE FROM {table} ''')
@@ -287,7 +365,7 @@ def empty_table():
 @app.post("/~delete-table")
 def delete_table():
     if "table" in request.form:
-        table = request.form.get("table")
+        table = parseString(request.form.get("table"))
         if (sqliteFetch(f''' SELECT `tbl_name` from sqlite_master WHERE `name` = '{table}' ''')) == [] or table == "sqlite_sequence":
             return render_template("error.sqliteExplorer", basicdata=basicdata), 404
         query = conn.execute(f''' DROP TABLE {table} ''')
@@ -355,7 +433,7 @@ def sql_executer():
 @app.route("/addcolumn")
 def add_column():
     if "table" in request.args:
-        table = request.args.get("table")
+        table = parseString(request.args.get("table"))
         if (sqliteFetch(f''' SELECT `tbl_name` from sqlite_master WHERE `name` = '{table}' ''')) == [] or table == "sqlite_sequence":
             return render_template("error.sqliteExplorer", basicdata=basicdata), 404
         data = get_table_info(table)
@@ -366,9 +444,9 @@ def add_column():
 @app.route("/editrow")
 def edit_row():
     if "table" in request.args and "key" in request.args and "index" in request.args:
-        table = request.args.get("table")
-        key = request.args.get("key")
-        index = request.args.get("index")
+        table = parseString(request.args.get("table"))
+        key = parseString(request.args.get("key"))
+        index = parseString(request.args.get("index"))
         if (sqliteFetch(f''' SELECT `tbl_name` from sqlite_master WHERE `name` = '{table}' ''')) == [] or table == "sqlite_sequence":
             return render_template("error.sqliteExplorer", basicdata=basicdata), 404
         table_data = get_table_info(table)
@@ -382,8 +460,8 @@ def edit_row():
 @app.route("/renamecolumn")
 def rename_column():
     if "table" in request.args and "column" in request.args:
-        table = request.args.get("table")
-        column = request.args.get("column")
+        table = parseString(request.args.get("table"))
+        column = parseString(request.args.get("column"))
         if (sqliteFetch(f''' SELECT `tbl_name` from sqlite_master WHERE `name` = '{table}' ''')) == [] or table == "sqlite_sequence":
             return render_template("error.sqliteExplorer", basicdata=basicdata), 404
     table_data = get_table_info(table)
