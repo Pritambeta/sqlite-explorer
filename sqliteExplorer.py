@@ -1598,7 +1598,7 @@ if get_data()["file_location"] != "":
     button4.pack(padx=140, pady=3, ipadx=26)
 
 label = Label(root, text="Port:")
-entry = Entry(root, width=4, borderwidth=1, relief="sunken", textvariable=sqliteExplorerPort)
+entry = Entry(root, width=6, borderwidth=1, relief="sunken", textvariable=sqliteExplorerPort)
 entry.pack(anchor=SE, padx=20, pady=10)
 
 root.mainloop()
