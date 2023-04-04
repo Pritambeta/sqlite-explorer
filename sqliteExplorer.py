@@ -1531,6 +1531,10 @@ def write_data(data):
         e.write(pickle_dumps(data))
 
 root = Tk()
+
+sqliteExplorerPort = IntVar()
+sqliteExplorerPort.set(6068)
+
 def newDatabase(event):
     global database
     database = filedialog.asksaveasfilename(initialfile="*.db", filetypes=(('database files', 'db'),))
@@ -1570,10 +1574,10 @@ def resetApp(event):
 
 
 root.title("SQLite Database Explorer")
-root.geometry("400x220")
+root.geometry("400x236")
 # root.wm_iconbitmap("media/images/sqliteExplorer.ico")
-root.minsize(400, 200)
-root.maxsize(455, 300)
+root.minsize(400, 236)
+root.maxsize(400, 236)
 root.config(background="#ffffff")
 button1 = Button(root, text="New Database", cursor="hand2")
 button1.bind("<Button-1>", newDatabase)
@@ -1584,6 +1588,7 @@ button3.bind("<Button-1>", openLastDatabase)
 button4 = Button(root, text="Reset App", cursor="hand2")
 button4.bind("<Button-1>", resetApp)
 
+
 frame1 = Frame(root)
 frame1.pack(pady=20)
 button1.pack(padx=140, pady=3, ipadx=13)
@@ -1591,6 +1596,10 @@ button2.pack(padx=140, pady=3, ipadx=10)
 if get_data()["file_location"] != "":
     button3.pack(padx=140, pady=3)
     button4.pack(padx=140, pady=3, ipadx=26)
+
+label = Label(root, text="Port:")
+entry = Entry(root, width=4, borderwidth=1, relief="sunken", textvariable=sqliteExplorerPort)
+entry.pack(anchor=SE, padx=20, pady=10)
 
 root.mainloop()
 
@@ -2013,9 +2022,8 @@ def serverErrorHandler(error):
     return render_template_string(pages['servererror'], basicdata=basicdata), 500
 
 
-webbrowser_open("http://127.0.0.1:6068")
-print("Started SQLite Explorer on http://127.0.0.1:6068")
+webbrowser_open(f"http://127.0.0.1:{sqliteExplorerPort.get()}")
+print(f"Started SQLite Explorer on http://127.0.0.1:{sqliteExplorerPort.get()}")
 
-app.run(port=6068)
-
+app.run(port=sqliteExplorerPort.get())
 
